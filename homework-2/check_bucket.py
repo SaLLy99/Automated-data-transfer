@@ -19,10 +19,10 @@ def check_bucket(bucket_name):
 
 def bucket_delete(bucket_name):
     try:
-        bucket = boto3.resource('s3').Bucket(bucket_name)
-        bucket.objects.all().delete()
-        bucket.delete()
-        # s3.delete_bucket(Bucket=bucket_name)
+        # bucket = boto3.resource('s3').Bucket(bucket_name)
+        # bucket.objects.all().delete()
+        # bucket.delete()
+        s3.delete_bucket(Bucket=bucket_name)
         print(f"bucket {bucket_name} deleted")
     except ClientError as e:
         print(e)

@@ -39,7 +39,7 @@ python create_bucket.py --bucket=demo2.test.com
 2)Attach new policy to our bucket, in order to see result , please run 'attach_policy py' from terminal in this way:
 python attach_policy.py --bucket=demo2.test.com
 
-3)Make configuration for public static website, in order to see result , please run 'set_website_config.py' from terminal
+3)Make configuration for public static website and prints website url, in order to see result , please run 'set_website_config.py' from terminal
 in this way:python set_website_config.py --bucket=demo2.test.com
 
 4)Upload content to our bucket, in order to see result, please run 'upload_website.py' from terminal in this way:

@@ -36,7 +36,7 @@ def print_bucket_url(bucket_name):
     location = s3.get_bucket_location(Bucket=bucket_name)['LocationConstraint']
     key = ""
     url = "https://s3-%s.amazonaws.com/%s/%s" % (location, bucket_name, key)
-    print(url)
+    print(f"website address:{url}")
 
 
 def parse_args():

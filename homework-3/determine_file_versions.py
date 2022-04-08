@@ -1,38 +1,39 @@
-from datetime import datetime
-
 import boto3
-from botocore.exceptions import ClientError
+import botocore.exceptions
 
-s3 = boto3.client('s3')
+s3_client = boto3.client('s3')
+s3_resource = boto3.resource('s3')
 
 
 def upload_file_with_new_version(bucket_name, file_name):
-    # Get a list of all versions contained in the bucket
-    try:
-        versions = s3.list_object_versions(Bucket=bucket_name, Prefix=file_name)
-    except ClientError as e:
-        raise Exception("boto3 client error in list_all_objects_version function: " + e.__str__())
-    except Exception as e:
-        raise Exception("Unexpected error in list_all_objects_version function of s3 helper: " + e.__str__())
-    i = 0
+    continue_process = check_versioning(bucket_name)
+    if not continue_process:
+        enable_versioning(bucket_name)
+        upload_file_with_new_version(bucket_name, file_name)
+    else:
+        versions = s3_resource.Bucket(bucket_name).object_versions.filter(Prefix=file_name)
+        versions_list = []
 
-    # Versions['Versions'] is sorted and we need to get version id of the element which  was modified before last
-    # modification
-    versions_length = len(versions['Versions'])
-    while i < versions_length-1:
-        version_id = versions['Versions'][i]['VersionId']
-        file_key = versions['Versions'][i]['Key']
-        i = i + 1
+        for version in versions:
+            obj = version.get()
+            versions_list.append({
+                'Key': obj.get('Key'),
+                'VersionId': obj.get('VersionId'),
+                'LastModified': obj.get('LastModified')
+            })
+        # sort versions_list by lastModified date
+        versions_list.sort(key=lambda x: x['LastModified'])
+        versions_length = len(versions_list)
+        response = s3_client.get_object(
+            Bucket=bucket_name,
+            Key=file_name,
+            # get one of the last modified object's version id
+            VersionId=versions_list[versions_length - 2]['VersionId'],
+        )
+        data = response['Body'].read()
 
-    response = s3.get_object(
-        Bucket=bucket_name,
-        Key=file_key,
-        VersionId=version_id,
-    )
-    data = response['Body'].read()
-
-    create_file_with_older_version(file_name, data)
-    upload_file_put(bucket_name, file_name)
+        create_file_with_older_version(file_name, data)
+        upload_file_put(bucket_name, file_name)
 
 
 def create_file_with_older_version(file_name, data):
@@ -43,9 +44,34 @@ def create_file_with_older_version(file_name, data):
 def upload_file_put(bucket_name, file_name):
     try:
         with open(file_name, "rb") as file:
-            s3.put_object(Bucket=bucket_name, Key=file_name, Body=file.read())
+            s3_client.put_object(Bucket=bucket_name, Key=file_name, Body=file.read())
         print(f"file {file_name} uploaded to bucket {bucket_name}")
-    except s3.exceptions.ClientError as ex:
+    except s3_client.exceptions.ClientError as ex:
+        print(ex)
+
+
+def check_versioning(bucket_name):
+    result = False
+    for bucket in s3_client.list_buckets()['Buckets']:
+        bucket = bucket['Name']
+        response = s3_client.get_bucket_versioning(Bucket=bucket)
+        if 'Status' in response and response['Status'] == 'Enabled':
+            result = True
+    return result
+
+
+def enable_versioning(bucket_name):
+    try:
+        response = s3_client.put_bucket_versioning(
+            Bucket=bucket_name,
+            VersioningConfiguration={
+                "Status": "Enabled",
+            },
+        )
+
+        print(f"versioning for bucket {bucket_name} is enabled")
+
+    except botocore.exceptions.ClientError as ex:
         print(ex)
 
 

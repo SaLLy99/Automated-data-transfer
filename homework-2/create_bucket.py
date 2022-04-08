@@ -16,6 +16,7 @@ def create_bucket(bucket_name):
             s3.create_bucket(Bucket=bucket_name)
             # CreateBucketConfiguration={"LocationConstraint": AWS_REGION})
             # lab's api can't create bucket with this parameter  'LocationConstraint'
+            # but can work with default region
 
             print(f"Bucket {bucket_name} was created successfully")
     except Exception as ex:

@@ -16,6 +16,7 @@ def upload_file_with_new_version(bucket_name, file_name):
 
         for version in versions:
             obj = version.get()
+            print(obj)
             versions_list.append({
                 'Key': obj.get('Key'),
                 'VersionId': obj.get('VersionId'),
@@ -23,12 +24,12 @@ def upload_file_with_new_version(bucket_name, file_name):
             })
         # sort versions_list by lastModified date
         versions_list.sort(key=lambda x: x['LastModified'])
-        versions_length = len(versions_list)
+        # versions_length = len(versions_list)
         response = s3_client.get_object(
             Bucket=bucket_name,
             Key=file_name,
             # get one of the last modified object's version id
-            VersionId=versions_list[versions_length - 2]['VersionId'],
+            VersionId=versions_list[-1]['VersionId'],
         )
         data = response['Body'].read()
 

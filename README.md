@@ -1,4 +1,4 @@
-# homeworks
+# Automated data transfer
 This is for task automation only
 
 First homework:

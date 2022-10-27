@@ -1,5 +1,5 @@
 # homeworks
-This is for homework only
+This is for task automation only
 
 First homework:
   
